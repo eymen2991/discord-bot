@@ -202,57 +202,50 @@ let musicQueue = [];
 let isLooping = false; // Döngü durumu
 let currentResource = null; // Ses seviyesi kontrolü için
 
+const play = require('play-dl');
+
 async function playNext(message) {
     if (musicQueue.length === 0) return;
 
     const { query, message: originalMessage } = musicQueue[0];
 
     try {
-        const info = await ytDlp(query, {
-            dumpJson: true,
-            defaultSearch: 'ytsearch1:',
-            format: 'bestaudio/best',
-            noWarnings: true,
-            noCallHome: true,
-            noCheckCertificate: true
-        });
+        let stream;
+        let videoInfo;
 
-        const video = info.entries ? info.entries[0] : info;
-        if (!video || !video.url) {
-            originalMessage.channel.send(`❌ **${query}** bulunamadı, sıradakine geçiliyor...`);
-            musicQueue.shift();
-            return playNext(originalMessage);
+        if (query.startsWith('http')) {
+            videoInfo = await play.video_info(query);
+            stream = await play.stream(query);
+        } else {
+            const searchResults = await play.search(query, { limit: 1 });
+            if (searchResults.length === 0) {
+                originalMessage.channel.send(`❌ **${query}** bulunamadı, sıradakine geçiliyor...`);
+                musicQueue.shift();
+                return playNext(originalMessage);
+            }
+            videoInfo = searchResults[0];
+            stream = await play.stream(videoInfo.url);
         }
 
-        const ffmpegProcess = spawn(ffmpegPath, [
-            '-reconnect', '1',
-            '-reconnect_streamed', '1',
-            '-reconnect_delay_max', '5',
-            '-i', video.url,
-            '-f', 's16le',
-            '-ar', '48000',
-            '-ac', '2',
-            'pipe:1'
-        ], { stdio: ['ignore', 'pipe', 'ignore'] });
-
-        const resource = createAudioResource(ffmpegProcess.stdout, {
-            inputType: 'raw',
+        const resource = createAudioResource(stream.stream, {
+            inputType: stream.type,
             inlineVolume: true
         });
 
         resource.volume.setVolume(0.5);
-        currentResource = resource; // Ses ayarı için sakla
+        currentResource = resource;
         player.play(resource);
 
         const connection = getVoiceConnection(originalMessage.guild.id);
         if (connection) connection.subscribe(player);
 
+        const video = videoInfo.video_details || videoInfo;
         const embed = new EmbedBuilder()
             .setTitle("🎶 Şimdi Çalıyor")
-            .setDescription(`**[${video.title}](${video.webpage_url})**`)
-            .setThumbnail(video.thumbnail)
+            .setDescription(`**[${video.title}](${video.url || video.webpage_url})**`)
+            .setThumbnail(video.thumbnails ? video.thumbnails[0].url : video.thumbnail?.url || video.thumbnail)
             .addFields(
-                { name: "⏳ Süre", value: `\`${video.duration_string || "Bilinmiyor"}\``, inline: true },
+                { name: "⏳ Süre", value: `\`${video.durationRaw || video.duration_string || "Bilinmiyor"}\``, inline: true },
                 { name: "👤 İsteyen", value: `${originalMessage.author}`, inline: true }
             )
             .setColor("#FF0000");
@@ -260,7 +253,7 @@ async function playNext(message) {
         originalMessage.channel.send({ embeds: [embed] });
     } catch (error) {
         console.error("[KUYRUK HATASI]:", error);
-        originalMessage.channel.send(`❌ **${query}** çalınırken hata oluştu.`);
+        originalMessage.channel.send(`❌ **${query}** çalınırken hata oluştu. Hatanın sebebi: ${error.message || "Bilinmiyor"}`);
         musicQueue.shift();
         playNext(originalMessage);
     }
