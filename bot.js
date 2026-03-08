@@ -290,7 +290,7 @@ const slashCommands = [
     },
     {
         name: 'blackjack',
-        description: 'Blackjack (21) oynarsın.',
+        description: 'Blackjack oynarsın.',
         options: [{ name: 'miktar', description: 'Bahis miktarı', type: 4, required: true }]
     },
     {
@@ -647,7 +647,7 @@ client.on('interactionCreate', async interaction => {
             .addFields(
                 { name: "💰 Ekonomi", value: "`n!bakiye` - Bakiyeni gösterir\n`n!gunluk` - Günlük para alırsın\n`n!slot <miktar>` - Slot oynarsın\n`n!zenginler` - En zenginleri gösterir\n`n!paraat @kişi <miktar>` - Para gönderirsin\n`n!market` - Eşya fiyatlarını görürsün\n`n!satınal <ürün> <miktar>` - Eşya alırsın\n`n!sat <ürün> <miktar>` - Eşya satarsın\n`n!envanter` - Eşyalarını görürsün", inline: false },
                 { name: "📈 Level Sistemi", value: "`n!level` - Seviyeni ve XP'ni gösterir", inline: false },
-                { name: " Kumar Oyunları", value: "`/blackjack <bahis>` - 21 Oynarsın\n`/mayın <bahis> <mayın_sayısı>` - Mayın tarlası oynarsın", inline: false },
+                { name: "🎰 Kumar Oyunları", value: "`/blackjack <bahis>` - Blackjack oynarsın\n`/mayın <bahis> <mayın_sayısı>` - Mayın tarlası oynarsın", inline: false },
                 { name: "🎮 Eğlence", value: "`nex <herhangi bir şey>` - Yapay zeka (BETA) ile sohbet\n`n!karakter <isim>` - Karakter hikayeleri (Wikipedia destekli)\n`n!ego` - Kim egolu seçer\n`n!roast @kişi` - Laf sokar\n`n!taş` - TKM oynarsın\n`n!sarıl`/`n!op`/`n!tokat` - Gif atar\n`n!pp @kişi` - Avatarını gösterir\n`n!üye` - Sunucu istatistikleri", inline: false }
             )
             .setFooter({ text: "NEXORA BOT | Tüm Sistemler Aktif" });
@@ -1711,8 +1711,8 @@ client.on('messageCreate', async (message) => {
             .addFields(
                 { name: "💰 Ekonomi", value: "`n!bakiye` - Bakiyeni gösterir\n`n!gunluk` - Günlük para alırsın\n`n!slot <miktar>` - Slot oynarsın\n`n!zenginler` - En zenginleri gösterir\n`n!paraat @kişi <miktar>` - Para gönderirsin\n`n!market` - Eşya fiyatlarını görürsün\n`n!satınal <ürün> <miktar>` - Eşya alırsın\n`n!sat <ürün> <miktar>` - Eşya satarsın\n`n!envanter` - Eşyalarını görürsün\n`n!sans` - Günlük şansını ölçer\n`n!tahmin <sayı>` - Sayı tahmin oyunu", inline: false },
                 { name: "📈 Level Sistemi", value: "`n!level` - Seviyeni ve XP'ni gösterir (Görsel Kart)", inline: false },
-                { name: "🃏 Kumar Oyunları", value: "`n!blackjack <bahis>` veya `/blackjack` - 21 Oynarsın\n`n!mayın <bahis> <mayın_sayısı>` veya `/mayın` - Mayın tarlası oynarsın", inline: false },
-                { name: "🎮 Eğlence & Müzik", value: "`nex <herhangi bir şey>` - Yapay zeka (BETA) ile sohbet\n`n!karakter <isim>` - Karakter hikayeleri (Wikipedia destekli)\n`n!çal <şarkı>` - Müzik çalar\n`n!geç` - Şarkıyı geçer\n`n!dur`/`n!devam` - Müziği yönetir\n`n!sıra` - Kuyruğu gösterir\n`n!ses <0-100>` - Ses seviyesini ayarlar\n`n!döngü` - Şarkıyı tekrarlar\n`n!çık` - Ses kanalından çıkar\n`n!ego` - Kim egolu seçer\n`n!roast @kişi` - Laf sokar\n`n!taş` - TKM oynarsın\n`n!sarıl`/`n!op`/`n!tokat` - Gif atar\n`n!pp @kişi` - Avatarını gösterir (Görsel Kart)\n`n!üye` - Sunucu istatistikleri", inline: false }
+                { name: "� Kumar Oyunları", value: "`n!blackjack <bahis>` veya `/blackjack` - Blackjack oynarsın\n`n!mayın <bahis> <mayın_sayısı>` veya `/mayın` - Mayın tarlası oynarsın", inline: false },
+                { name: "🎮 Eğlence", value: "`nex <herhangi bir şey>` - Yapay zeka (BETA) ile sohbet\n`n!karakter <isim>` - Karakter hikayeleri (Wikipedia destekli)\n`n!ego` - Kim egolu seçer\n`n!roast @kişi` - Laf sokar\n`n!taş` - TKM oynarsın\n`n!sarıl`/`n!op`/`n!tokat` - Gif atar\n`n!pp @kişi` - Avatarını gösterir (Görsel Kart)\n`n!üye` - Sunucu istatistikleri", inline: false }
             )
             .setFooter({ text: "NEXORA BOT | Tüm Sistemler Aktif" });
         message.channel.send({ embeds: [embed] });
