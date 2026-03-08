@@ -1,12 +1,7 @@
-const { Client, GatewayIntentBits, EmbedBuilder, PermissionsBitField, ActivityType, Collection, REST, Routes, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, Partials, AttachmentBuilder } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, VoiceConnectionStatus, getVoiceConnection, NoSubscriberBehavior } = require('@discordjs/voice');
 const canvafy = require('canvafy');
-const ytDlp = require('yt-dlp-exec');
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
-const ffmpegPath = require('ffmpeg-static');
-const { spawn } = require('child_process');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const express = require('express');
@@ -73,12 +68,6 @@ function getScore(hand) {
     return score;
 }
 
-const player = createAudioPlayer({
-    behaviors: {
-        noSubscriber: NoSubscriberBehavior.Play,
-    },
-});
-
 const slotCooldowns = new Map();
 
 const client = new Client({
@@ -87,8 +76,7 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildPresences,
-        GatewayIntentBits.GuildVoiceStates
+        GatewayIntentBits.GuildPresences
     ]
 });
 
@@ -196,80 +184,7 @@ function p_updateMarket(data) {
 const xp_yukle = () => loadJSON('xp.json');
 const xp_kaydet = (data) => saveJSON('xp.json', data);
 
-// ---------------- MÜZİK DEĞİŞKENLERİ ----------------
-
-let musicQueue = [];
-let isLooping = false; // Döngü durumu
-let currentResource = null; // Ses seviyesi kontrolü için
-
-const play = require('play-dl');
-
-async function playNext(message) {
-    if (musicQueue.length === 0) return;
-
-    const { query, message: originalMessage } = musicQueue[0];
-
-    try {
-        let stream;
-        let videoInfo;
-
-        if (query.startsWith('http')) {
-            videoInfo = await play.video_info(query);
-            stream = await play.stream(query);
-        } else {
-            const searchResults = await play.search(query, { limit: 1 });
-            if (searchResults.length === 0) {
-                originalMessage.channel.send(`❌ **${query}** bulunamadı, sıradakine geçiliyor...`);
-                musicQueue.shift();
-                return playNext(originalMessage);
-            }
-            videoInfo = searchResults[0];
-            stream = await play.stream(videoInfo.url);
-        }
-
-        const resource = createAudioResource(stream.stream, {
-            inputType: stream.type,
-            inlineVolume: true
-        });
-
-        resource.volume.setVolume(0.5);
-        currentResource = resource;
-        player.play(resource);
-
-        const connection = getVoiceConnection(originalMessage.guild.id);
-        if (connection) connection.subscribe(player);
-
-        const video = videoInfo.video_details || videoInfo;
-        const embed = new EmbedBuilder()
-            .setTitle("🎶 Şimdi Çalıyor")
-            .setDescription(`**[${video.title}](${video.url || video.webpage_url})**`)
-            .setThumbnail(video.thumbnails ? video.thumbnails[0].url : video.thumbnail?.url || video.thumbnail)
-            .addFields(
-                { name: "⏳ Süre", value: `\`${video.durationRaw || video.duration_string || "Bilinmiyor"}\``, inline: true },
-                { name: "👤 İsteyen", value: `${originalMessage.author}`, inline: true }
-            )
-            .setColor("#FF0000");
-
-        originalMessage.channel.send({ embeds: [embed] });
-    } catch (error) {
-        console.error("[KUYRUK HATASI]:", error);
-        originalMessage.channel.send(`❌ **${query}** çalınırken hata oluştu. Hatanın sebebi: ${error.message || "Bilinmiyor"}`);
-        musicQueue.shift();
-        playNext(originalMessage);
-    }
-}
-
-// Player Idle olduğunda sıradakine geç
-player.on(AudioPlayerStatus.Idle, () => {
-    if (musicQueue.length > 0) {
-        if (!isLooping) {
-            musicQueue.shift();
-        }
-        if (musicQueue.length > 0) {
-            playNext(musicQueue[0].message);
-        }
-    }
-});
+// ---------------- BOT HAZIR ----------------
 
 // ---------------- BOT HAZIR ----------------
 
@@ -323,24 +238,6 @@ const slashCommands = [
         description: 'Seviye ve XP bilgisini gösterir.',
         options: [{ name: 'kullanıcı', description: 'Bakılacak kişi', type: 6, required: false }]
     },
-
-    // Müzik
-    {
-        name: 'çal',
-        description: 'Müzik çalar.',
-        options: [{ name: 'şarkı', description: 'Şarkı adı veya URL', type: 3, required: true }]
-    },
-    { name: 'geç', description: 'Şarkıyı geçer.' },
-    { name: 'dur', description: 'Müziği durdurur.' },
-    { name: 'devam', description: 'Müziği devam ettirir.' },
-    { name: 'çık', description: 'Ses kanalından çıkar.' },
-    { name: 'sıra', description: 'Şarkı kuyruğunu gösterir.' },
-    {
-        name: 'ses',
-        description: 'Ses seviyesini ayarlar.',
-        options: [{ name: 'seviye', description: '0-100 arası', type: 4, required: true }]
-    },
-    { name: 'döngü', description: 'Şarkıyı tekrarlar.' },
 
     // Eğlence
     { name: 'ego', description: 'Günün en egolusunu seçer.' },
@@ -749,8 +646,8 @@ client.on('interactionCreate', async interaction => {
             .addFields(
                 { name: "💰 Ekonomi", value: "`n!bakiye` - Bakiyeni gösterir\n`n!gunluk` - Günlük para alırsın\n`n!slot <miktar>` - Slot oynarsın\n`n!zenginler` - En zenginleri gösterir\n`n!paraat @kişi <miktar>` - Para gönderirsin\n`n!market` - Eşya fiyatlarını görürsün\n`n!satınal <ürün> <miktar>` - Eşya alırsın\n`n!sat <ürün> <miktar>` - Eşya satarsın\n`n!envanter` - Eşyalarını görürsün", inline: false },
                 { name: "📈 Level Sistemi", value: "`n!level` - Seviyeni ve XP'ni gösterir", inline: false },
-                { name: "� Kumar Oyunları", value: "`/blackjack <bahis>` - 21 Oynarsın\n`/mayın <bahis> <mayın_sayısı>` - Mayın tarlası oynarsın", inline: false },
-                { name: "�🎮 Eğlence & Müzik", value: "`nex <herhangi bir şey>` - Yapay zeka (BETA) ile sohbet\n`n!karakter <isim>` - Karakter hikayeleri (Wikipedia destekli)\n`n!çal <şarkı>` - Müzik çalar\n`n!geç` - Şarkıyı geçer\n`n!dur`/`n!devam` - Müziği yönetir\n`n!sıra` - Kuyruğu gösterir\n`n!ses <0-100>` - Ses seviyesini ayarlar\n`n!döngü` - Şarkıyı tekrarlar\n`n!çık` - Ses kanalından çıkar\n`n!ego` - Kim egolu seçer\n`n!roast @kişi` - Laf sokar\n`n!taş` - TKM oynarsın\n`n!sarıl`/`n!op`/`n!tokat` - Gif atar\n`n!pp @kişi` - Avatarını gösterir\n`n!üye` - Sunucu istatistikleri", inline: false }
+                { name: " Kumar Oyunları", value: "`/blackjack <bahis>` - 21 Oynarsın\n`/mayın <bahis> <mayın_sayısı>` - Mayın tarlası oynarsın", inline: false },
+                { name: "🎮 Eğlence", value: "`nex <herhangi bir şey>` - Yapay zeka (BETA) ile sohbet\n`n!karakter <isim>` - Karakter hikayeleri (Wikipedia destekli)\n`n!ego` - Kim egolu seçer\n`n!roast @kişi` - Laf sokar\n`n!taş` - TKM oynarsın\n`n!sarıl`/`n!op`/`n!tokat` - Gif atar\n`n!pp @kişi` - Avatarını gösterir\n`n!üye` - Sunucu istatistikleri", inline: false }
             )
             .setFooter({ text: "NEXORA BOT | Tüm Sistemler Aktif" });
         await interaction.reply({ embeds: [embed] });
@@ -981,40 +878,6 @@ client.on('interactionCreate', async interaction => {
 
         const attachment = new AttachmentBuilder(rankCard, { name: `rankcard-${user.id}.png` });
         await interaction.reply({ files: [attachment] });
-    }
-
-    else if (commandName === 'çal') {
-        const query = interaction.options.getString('şarkı');
-        const member = interaction.member;
-        if (!member.voice.channel) return await interaction.reply("Ses kanalına gir!");
-        let connection = getVoiceConnection(interaction.guildId);
-        if (!connection) connection = joinVoiceChannel({ channelId: member.voice.channel.id, guildId: interaction.guildId, adapterCreator: interaction.guild.voiceAdapterCreator });
-        musicQueue.push({ query, message: { author: interaction.user, channel: interaction.channel, guild: interaction.guild } });
-        if (player.state.status !== AudioPlayerStatus.Playing) {
-            await playNext({ author: interaction.user, channel: interaction.channel, guild: interaction.guild });
-            await interaction.reply(`🎶 **${query}** çalınıyor...`);
-        } else {
-            await interaction.reply(`✅ **${query}** sıraya eklendi!`);
-        }
-    }
-
-    else if (commandName === 'geç') { player.stop(); await interaction.reply("⏭️ Şarkı geçildi."); }
-    else if (commandName === 'dur') { player.pause(); await interaction.reply("⏸️ Durduruldu."); }
-    else if (commandName === 'devam') { player.unpause(); await interaction.reply("▶️ Devam ediyor."); }
-    else if (commandName === 'sıra') {
-        let l = "";
-        for (let i = 0; i < Math.min(musicQueue.length, 5); i++) l += `${i + 1}. ${musicQueue[i].query}\n`;
-        await interaction.reply({ embeds: [new EmbedBuilder().setTitle("🎼 Kuyruk").setDescription(l || "Boş")] });
-    }
-    else if (commandName === 'ses') {
-        const v = interaction.options.getInteger('seviye');
-        if (currentResource) { currentResource.volume.setVolume(v / 100); await interaction.reply(`🔊 Ses: %${v}`); }
-        else await interaction.reply("Çalan bir şey yok!");
-    }
-    else if (commandName === 'döngü') { isLooping = !isLooping; await interaction.reply(`🔄 Döngü: ${isLooping ? "Açık" : "Kapalı"}`); }
-    else if (commandName === 'çık') {
-        const c = getVoiceConnection(interaction.guildId);
-        if (c) { c.destroy(); musicQueue = []; isLooping = false; await interaction.reply("👋 Çıktım."); }
     }
 
     else if (commandName === 'ego') {
