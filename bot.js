@@ -2178,12 +2178,16 @@ client.on('messageCreate', async (message) => {
 console.log("-----------------------------------------");
 console.log("Discord'a bağlanma süreci başlatıldı...");
 
+client.on('debug', (info) => {
+    console.log(`[DEBUG] ${info}`);
+});
+
 if (!TOKEN) {
     console.error("❌ HATA: TOKEN bulunamadı! Render panelinden Environment Variables kısmına TOKEN eklediğinden emin ol.");
 } else {
     console.log(`✅ TOKEN mevcut. Uzunluk: ${TOKEN.length} karakter.`);
-    if (TOKEN.includes(" ")) console.warn("⚠️ UYARI: TOKEN içinde boşluk karakteri var! Bu sorun yaratabilir.");
-    if (TOKEN.includes("\n") || TOKEN.includes("\r")) console.warn("⚠️ UYARI: TOKEN içinde satır başı karakteri var!");
+    // Token güvenliği için sadece format kontrolü
+    if (TOKEN.startsWith("Bot ")) console.warn("⚠️ UYARI: Token 'Bot ' ile başlıyor. Discord.js v14 bunu istemez, sadece kodu yapıştırın.");
 }
 
 client.login(TOKEN).then(() => {
