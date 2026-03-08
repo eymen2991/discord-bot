@@ -1,0 +1,51 @@
+{
+    "users": {
+        "694198754487697490": {
+            "coins": 436,
+            "items": {
+                "elmas": 34,
+                "yakut": 7,
+                "altin": 3,
+                "gumus": 1,
+                "bronz": 16,
+                "tuvalet_kagidi": 1
+            },
+            "dailyLuck": 64,
+            "lastLuckUse": 1772464205734,
+            "tahminCount": 2,
+            "lastTahminReset": 1772398800000
+        },
+        "898164720387899392": {
+            "coins": 1000,
+            "items": {
+                "elmas": 10,
+                "yakut": 5,
+                "altin": 0,
+                "gumus": 0,
+                "bronz": 0,
+                "tuvalet_kagidi": 0
+            },
+            "dailyLuck": 58,
+            "lastLuckUse": 1772465648254,
+            "tahminCount": 0,
+            "lastTahminReset": 0
+        }
+    },
+    "market": {
+        "elmas": 42721,
+        "yakut": 53823,
+        "altin": 11656,
+        "gumus": 11763,
+        "bronz": 987,
+        "tuvalet_kagidi": 1299
+    },
+    "marketChanges": {
+        "elmas": "-6.1%",
+        "yakut": "-5.6%",
+        "altin": "+11.4%",
+        "gumus": "+10.6%",
+        "bronz": "+5.8%",
+        "tuvalet_kagidi": "+13.7%"
+    },
+    "lastMarketUpdate": 1772914407280
+}
