@@ -1,3 +1,4 @@
+const { Client, GatewayIntentBits, Partials, Collection, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, AttachmentBuilder, ActivityType, REST, Routes } = require('discord.js');
 const canvafy = require('canvafy');
 const fs = require('fs');
 const path = require('path');
@@ -1516,106 +1517,6 @@ client.on('messageCreate', async (message) => {
 
     // ---------------- MÜZİK KOMUTLARI ----------------
 
-    else if (command === "çal") {
-        const query = args.join(" ");
-        if (!query) return message.channel.send("Bir şarkı adı veya URL gir.");
-
-        const voiceChannel = message.member.voice.channel;
-        if (!voiceChannel) return message.channel.send("Ses kanalına gir.");
-
-        let connection = getVoiceConnection(message.guild.id);
-        if (!connection) {
-            connection = joinVoiceChannel({
-                channelId: voiceChannel.id,
-                guildId: message.guild.id,
-                adapterCreator: message.guild.voiceAdapterCreator,
-            });
-        }
-
-        try {
-            // Kuyruğa ekle
-            musicQueue.push({ query, message });
-
-            if (musicQueue.length > 1 || player.state.status === AudioPlayerStatus.Playing) {
-                return message.channel.send(`✅ **${query}** sıraya eklendi! (Sıradaki: ${musicQueue.length - 1})`);
-            }
-
-            await playNext(message);
-
-        } catch (error) {
-            console.error("[MÜZİK HATASI]:", error);
-            message.channel.send(`❌ Hata oluştu: ${error.message}`);
-        }
-    }
-
-    else if (command === "geç") {
-        if (musicQueue.length === 0) return message.channel.send("Sırada bir şey yok.");
-
-        message.channel.send("⏭️ Şarkı geçiliyor...");
-        player.stop(); // Bu Idle listener'ını tetikleyip playNext'i çağırır
-    }
-
-    else if (command === "dur") {
-        if (player.state.status === AudioPlayerStatus.Playing) {
-            player.pause();
-            message.channel.send("⏸ Duraklatıldı");
-        } else {
-            message.channel.send("Zaten bir şey çalmıyor.");
-        }
-    }
-
-    else if (command === "devam") {
-        if (player.state.status === AudioPlayerStatus.Paused) {
-            player.unpause();
-            message.channel.send("▶️ Devam ediyor");
-        } else {
-            message.channel.send("Zaten çalıyor veya duraklatılmış bir şarkı yok.");
-        }
-    }
-
-    else if (command === "çık") {
-        const connection = getVoiceConnection(message.guild.id);
-        if (connection) {
-            connection.destroy();
-            musicQueue = []; // Kuyruğu temizle
-            isLooping = false;
-            message.channel.send("👋 Çıktım ve kuyruk temizlendi.");
-        }
-    }
-
-    else if (command === "sıra") {
-        if (musicQueue.length === 0) return message.channel.send("📭 Kuyruk şu an boş.");
-
-        const embed = new EmbedBuilder()
-            .setTitle("🎼 Şarkı Kuyruğu")
-            .setColor("#00FF00");
-
-        let liste = "";
-        for (let i = 0; i < Math.min(musicQueue.length, 10); i++) {
-            liste += `${i === 0 ? "▶️ **Şu an:**" : `**${i}.**`} ${musicQueue[i].query}\n`;
-        }
-
-        if (musicQueue.length > 10) liste += `\n*ve ${musicQueue.length - 10} şarkı daha...*`;
-
-        embed.setDescription(liste);
-        embed.setFooter({ text: `Döngü: ${isLooping ? "✅ Açık" : "❌ Kapalı"}` });
-        message.channel.send({ embeds: [embed] });
-    }
-
-    else if (command === "ses") {
-        const vol = parseInt(args[0]);
-        if (isNaN(vol) || vol < 0 || vol > 100) return message.reply("❌ Lütfen 0-100 arası bir değer gir.");
-
-        if (!currentResource) return message.reply("❌ Şu an bir şey çalmıyor.");
-
-        currentResource.volume.setVolume(vol / 100);
-        message.reply(`🔊 Ses seviyesi: **%${vol}**`);
-    }
-
-    else if (command === "döngü") {
-        isLooping = !isLooping;
-        message.reply(`🔄 Döngü modu: **${isLooping ? "Açık (Şu anki şarkı tekrarlanacak)" : "Kapalı"}**`);
-    }
 
     // ---------------- EĞLENCE KOMUTLARI ----------------
 
