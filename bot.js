@@ -2175,13 +2175,28 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-console.log("Discord'a bağlanılıyor...");
+console.log("-----------------------------------------");
+console.log("Discord'a bağlanma süreci başlatıldı...");
+
 if (!TOKEN) {
-    console.error("HATA: TOKEN bulunamadı! Render panelinden Environment Variables kısmına TOKEN eklediğinden emin ol.");
+    console.error("❌ HATA: TOKEN bulunamadı! Render panelinden Environment Variables kısmına TOKEN eklediğinden emin ol.");
+} else {
+    console.log(`✅ TOKEN mevcut. Uzunluk: ${TOKEN.length} karakter.`);
+    if (TOKEN.includes(" ")) console.warn("⚠️ UYARI: TOKEN içinde boşluk karakteri var! Bu sorun yaratabilir.");
+    if (TOKEN.includes("\n") || TOKEN.includes("\r")) console.warn("⚠️ UYARI: TOKEN içinde satır başı karakteri var!");
 }
 
-client.login(TOKEN).catch(err => {
-    console.error("Discord'a bağlanırken hata oluştu:", err.message);
+client.login(TOKEN).then(() => {
+    console.log("✅ client.login() başarılı oldu!");
+}).catch(err => {
+    console.error("❌ Discord'a bağlanırken hata oluştu:");
+    console.error(err);
+});
+
+// Ready evend'i için ek log
+client.on("ready", () => {
+    console.log(`🚀 BOT RESMEN AKTİF: ${client.user.tag}`);
+    console.log("-----------------------------------------");
 });
 
 // ---------------- GRACEFUL SHUTDOWN (KAPATMA) ----------------
