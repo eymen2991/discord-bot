@@ -2130,26 +2130,31 @@ client.on('messageCreate', async (message) => {
         try {
             const prompt = `Sen Nexora Bot'un yapay zeka asistanısın. Kısa ve öz cevap ver. Soru: ${soru}`;
 
-            let success = false;
-            let lastError = "";
-
-            // Modelleri dene
             const startIndex = lastWorkingModelIndex;
             const tryOrder = [...MODELS_TO_TRY.slice(startIndex), ...MODELS_TO_TRY.slice(0, startIndex)];
 
-            for (const item of tryOrder) {
-                try {
-                    const currentModel = item;
+            let success = false;
+            let lastError = "";
 
+            for (const currentModel of tryOrder) {
+                try {
+                    console.log(`[AI] Deneniyor: ${currentModel.name}`);
                     const fetchResp = await fetch(`https://generativelanguage.googleapis.com/${currentModel.version}/models/${currentModel.name}:generateContent?key=${GEMINI_API_KEY}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                     });
 
+                    if (!fetchResp.ok) {
+                        const errData = await fetchResp.json().catch(() => ({}));
+                        lastError = errData.error?.message || `Sunucu hatası (${fetchResp.status})`;
+                        console.warn(`[AI] ${currentModel.name} başarısız: ${lastError}`);
+                        continue; // Diğer modele geç
+                    }
+
                     const data = await fetchResp.json();
 
-                    if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    if (data.candidates && data.candidates[0].content.parts && data.candidates[0].content.parts[0].text) {
                         const responseText = data.candidates[0].content.parts[0].text;
                         await loadingMsg.edit(responseText.length > 2000 ? responseText.substring(0, 1997) + "..." : responseText);
                         lastWorkingModelIndex = MODELS_TO_TRY.findIndex(m => m.name === currentModel.name);
@@ -2157,20 +2162,23 @@ client.on('messageCreate', async (message) => {
                         break;
                     } else if (data.error) {
                         lastError = data.error.message;
-                        if (data.error.message.includes("quota")) {
-                            lastError = "Google API kotan dolmuş veya çok hızlı soruyorsun. Lütfen bir süre (1-2 dakika) bekle.";
-                        }
+                        console.warn(`[AI] ${currentModel.name} hatası: ${lastError}`);
                     }
                 } catch (err) {
                     lastError = "Bağlantı hatası.";
+                    console.error(`[AI] ${currentModel.name} bağlantı hatası:`, err.message);
                 }
             }
 
-            if (!success) throw new Error(lastError);
+            if (!success) {
+                let errorMessage = lastError || "Gemini'dan yanıt alınamadı.";
+                if (errorMessage.includes("quota")) errorMessage = "Google API kotan dolmuş. Lütfen biraz bekle.";
+                await loadingMsg.edit(`❌ ${errorMessage}`);
+            }
 
         } catch (error) {
             console.error("Gemini Genel Hata:", error.message);
-            await loadingMsg.edit(`❌ ${error.message}`);
+            await loadingMsg.edit(`❌ Bir sorun oluştu: ${error.message}`);
         }
     }
 });
