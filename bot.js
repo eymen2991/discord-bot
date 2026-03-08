@@ -2175,7 +2175,14 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-client.login(TOKEN);
+console.log("Discord'a bağlanılıyor...");
+if (!TOKEN) {
+    console.error("HATA: TOKEN bulunamadı! Render panelinden Environment Variables kısmına TOKEN eklediğinden emin ol.");
+}
+
+client.login(TOKEN).catch(err => {
+    console.error("Discord'a bağlanırken hata oluştu:", err.message);
+});
 
 // ---------------- GRACEFUL SHUTDOWN (KAPATMA) ----------------
 const handleShutdown = async (signal) => {
