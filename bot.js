@@ -2178,38 +2178,11 @@ client.on('messageCreate', async (message) => {
 console.log("-----------------------------------------");
 console.log("Discord'a bağlanma süreci başlatıldı...");
 
-client.on('debug', (info) => {
-    console.log(`[DEBUG] ${info}`);
-});
-
-if (!TOKEN) {
-    console.error("❌ HATA: TOKEN bulunamadı! Render panelinden Environment Variables kısmına TOKEN eklediğinden emin ol.");
-} else {
-    console.log(`✅ TOKEN mevcut. Uzunluk: ${TOKEN.length} karakter.`);
-
-    // Manuel API Testi
-    fetch('https://discord.com/api/v10/users/@me', {
-        headers: { Authorization: `Bot ${TOKEN}` }
-    }).then(res => {
-        if (res.status === 200) {
-            console.log("✅ API TESTİ: Token geçerli, bot bilgileri alındı.");
-        } else {
-            console.error(`❌ API TESTİ HATA: Token geçersiz olabilir! Durum Kodu: ${res.status}`);
-            if (res.status === 401) console.error("👉 Tavsiye: Token'ı Discord Portal'dan (Reset Token diyerek) yenileyip Render'a tekrar girmeyi dene.");
-        }
-    }).catch(err => {
-        console.error("❌ API TESTİ HATA: Discord API'sine ulaşılamıyor.", err.message);
-    });
-}
-
-client.login(TOKEN).then(() => {
-    console.log("✅ client.login() başarılı oldu!");
-}).catch(err => {
+client.login(TOKEN).catch(err => {
     console.error("❌ Discord'a bağlanırken hata oluştu:");
     console.error(err);
 });
 
-// Ready evend'i için ek log
 client.on("ready", () => {
     console.log(`🚀 BOT RESMEN AKTİF: ${client.user.tag}`);
     console.log("-----------------------------------------");
