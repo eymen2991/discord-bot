@@ -2186,8 +2186,20 @@ if (!TOKEN) {
     console.error("❌ HATA: TOKEN bulunamadı! Render panelinden Environment Variables kısmına TOKEN eklediğinden emin ol.");
 } else {
     console.log(`✅ TOKEN mevcut. Uzunluk: ${TOKEN.length} karakter.`);
-    // Token güvenliği için sadece format kontrolü
-    if (TOKEN.startsWith("Bot ")) console.warn("⚠️ UYARI: Token 'Bot ' ile başlıyor. Discord.js v14 bunu istemez, sadece kodu yapıştırın.");
+
+    // Manuel API Testi
+    fetch('https://discord.com/api/v10/users/@me', {
+        headers: { Authorization: `Bot ${TOKEN}` }
+    }).then(res => {
+        if (res.status === 200) {
+            console.log("✅ API TESTİ: Token geçerli, bot bilgileri alındı.");
+        } else {
+            console.error(`❌ API TESTİ HATA: Token geçersiz olabilir! Durum Kodu: ${res.status}`);
+            if (res.status === 401) console.error("👉 Tavsiye: Token'ı Discord Portal'dan (Reset Token diyerek) yenileyip Render'a tekrar girmeyi dene.");
+        }
+    }).catch(err => {
+        console.error("❌ API TESTİ HATA: Discord API'sine ulaşılamıyor.", err.message);
+    });
 }
 
 client.login(TOKEN).then(() => {
