@@ -1714,7 +1714,7 @@ client.on('messageCreate', async (message) => {
                 { name: "🎰 Kumar Oyunları", value: "`n!blackjack <bahis>` veya `/blackjack` - Blackjack oynarsın\n`n!mayın <bahis> <mayın_sayısı>` veya `/mayın` - Mayın tarlası oynarsın", inline: false },
                 { name: "🎮 Eğlence", value: "`nex <herhangi bir şey>` - Yapay zeka (BETA) ile sohbet\n`n!karakter <isim>` - Karakter hikayeleri (Wikipedia destekli)\n`n!ego` - Kim egolu seçer\n`n!roast @kişi` - Laf sokar\n`n!taş` - TKM oynarsın\n`n!sarıl`/`n!op`/`n!tokat` - Gif atar\n`n!pp @kişi` - Avatarını gösterir (Görsel Kart)\n`n!üye` - Sunucu istatistikleri", inline: false }
             )
-            .setFooter({ text: "NEXORA BOT | Tüm Sistemler Aktif | Sürüm: 1.0.1b" });
+            .setFooter({ text: `NEXORA BOT | Tüm Sistemler Aktif | Sürüm: 1.0.1b | PID: ${process.pid}` });
         message.channel.send({ embeds: [embed] });
     }
 
