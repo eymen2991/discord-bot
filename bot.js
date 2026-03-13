@@ -9,11 +9,28 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-    res.send('Nexora Bot 7/24 Aktif!');
+// Keep-alive headers - 503 hatalarını önlemek için
+app.use((req, res, next) => {
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Keep-Alive', 'timeout=60');
+    next();
 });
 
-app.listen(port, () => {
+app.get('/', (req, res) => {
+    res.status(200).send('Nexora Bot 7/24 Aktif! ✅');
+});
+
+// Sağlık kontrolü endpoint'i - UptimeRobot ve Render için
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        uptime: Math.floor(process.uptime()),
+        bot: client.isReady() ? 'online' : 'connecting',
+        timestamp: new Date().toISOString()
+    });
+});
+
+app.listen(port, '0.0.0.0', () => {
     console.log(`Web sunucusu ${port} portunda çalışıyor.`);
 });
 
