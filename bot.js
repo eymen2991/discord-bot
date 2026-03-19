@@ -1,4 +1,5 @@
 const { Client, GatewayIntentBits, Partials, Collection, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, AttachmentBuilder, ActivityType, REST, Routes } = require('discord.js');
+const { getHataCozum, pcHataVeritabani } = require('./pc-hata.js');
 const canvafy = require('canvafy');
 const fs = require('fs');
 const path = require('path');
@@ -98,7 +99,7 @@ const client = new Client({
     ]
 });
 
-const prefixes = ["nex ", "n!", "x!"];
+const prefixes = ["nex ", "n!", "x!", "!"];
 
 
 // ---------------- VERİ YÖNETİMİ ----------------
@@ -388,6 +389,22 @@ client.on('interactionCreate', async interaction => {
             );
 
             await interaction.update({ embeds: [embed], components: [row] });
+        }
+        else if (interaction.customId === 'pc_hata_select') {
+            const hataKey = interaction.values[0];
+            const cozum = pcHataVeritabani[hataKey];
+
+            if (!cozum) return await interaction.reply({ content: "❌ Hata bulunamadı.", ephemeral: true });
+
+            const embed = new EmbedBuilder()
+                .setTitle(cozum.baslik)
+                .setDescription(cozum.aciklama)
+                .setColor("#FF0000")
+                .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/MSI_Logo.svg/1200px-MSI_Logo.svg.png")
+                .addFields({ name: "🛠️ Çözüm Önerileri", value: cozum.cozumler.join("\n") })
+                .setFooter({ text: "Profesyonel Donanım Desteği | Nexora", iconURL: client.user.displayAvatarURL() });
+
+            await interaction.update({ embeds: [embed], components: [] });
         }
     }
 
@@ -1267,6 +1284,58 @@ client.on('messageCreate', async (message) => {
     const p_user = p_data.users[message.author.id];
     let mainParaData = para_yukle();
     const userPara = mainParaData[message.author.id] || 0;
+
+    // ---------------- PC HATA KOMUTU ----------------
+    if (command === "pc-hata") {
+        if (prefix === "nex ") return; // Nex prefixi ile çalışmaz
+
+        const hataSorgusu = args.join(" ");
+        if (!hataSorgusu) {
+            const embed = new EmbedBuilder()
+                .setTitle("🛠️ Nexora Donanım Servisi")
+                .setDescription("Lütfen listeden karşılaştığınız hatayı seçin veya arama yapmak için komutu şu şekilde kullanın:\n`!pc-hata [kod/sorun]`")
+                .setColor("#FF0000")
+                .setFooter({ text: "Hızlı Çözüm Menüsü" });
+
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId('pc_hata_select')
+                .setPlaceholder('Karşılaştığınız hatayı seçin...')
+                .addOptions(
+                    Object.keys(pcHataVeritabani).slice(0, 25).map(key => ({
+                        label: pcHataVeritabani[key].baslik.substring(0, 100),
+                        description: pcHataVeritabani[key].aciklama.substring(0, 100),
+                        value: key,
+                        emoji: key.startsWith("0x") ? "🟦" : "🛠️"
+                    }))
+                );
+
+            const row = new ActionRowBuilder().addComponents(selectMenu);
+            return message.channel.send({ embeds: [embed], components: [row] });
+        }
+
+        const cozum = getHataCozum(hataSorgusu);
+
+        if (!cozum) {
+            const embed = new EmbedBuilder()
+                .setTitle("🔍 Hata Analizi")
+                .setDescription(`**${hataSorgusu}** için spesifik bir çözüm bulamadım ama genel donanım hatası olabilir.`)
+                .addFields({ name: "Öneri", value: "Sistemi güvenli modda açmayı deneyebilir veya donanım bağlantılarını kontrol edebilirsiniz." })
+                .setColor("#FF0000") // MSI Kırmızısı
+                .setFooter({ text: "Nexora Donanım Servisi", iconURL: client.user.displayAvatarURL() });
+            
+            return message.channel.send({ embeds: [embed] });
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle(cozum.baslik)
+            .setDescription(cozum.aciklama)
+            .setColor("#FF0000") // MSI Kırmızısı
+            .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/MSI_Logo.svg/1200px-MSI_Logo.svg.png") // MSI Logosu (Opsiyonel)
+            .addFields({ name: "🛠️ Çözüm Önerileri", value: cozum.cozumler.join("\n") })
+            .setFooter({ text: "Profesyonel Donanım Desteği | Nexora", iconURL: client.user.displayAvatarURL() });
+
+        return message.channel.send({ embeds: [embed] });
+    }
 
     // ---------------- EKONOMİ KOMUTLARI ----------------
 
