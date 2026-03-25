@@ -37,6 +37,7 @@ dotenv.config();
 
 const TOKEN = process.env.TOKEN;
 const GIPHY_API_KEY = process.env.GIPHY_API_KEY;
+const STATUS_CHANNEL_ID = process.env.STATUS_CHANNEL_ID;
 const blackjackGames = new Map(); // Blackjack oyun takibi
 const minesGames = new Map(); // Mayın tarlası oyun takibi
 const xpCooldowns = new Map(); // Level sistemi için cooldown
