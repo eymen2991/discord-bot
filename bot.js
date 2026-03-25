@@ -4,8 +4,6 @@ const canvafy = require('canvafy');
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
@@ -39,17 +37,6 @@ dotenv.config();
 
 const TOKEN = process.env.TOKEN;
 const GIPHY_API_KEY = process.env.GIPHY_API_KEY;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const STATUS_CHANNEL_ID = process.env.STATUS_CHANNEL_ID;
-
-// Test sonuçlarına göre senin anahtarın için çalışan modeller ve sürümleri:
-const MODELS_TO_TRY = [
-    { name: "gemini-1.5-flash", version: "v1" },
-    { name: "gemini-2.0-flash", version: "v1" },
-    { name: "gemini-flash-latest", version: "v1beta" }
-];
-let lastWorkingModelIndex = 0;
-const aiCooldowns = new Map(); // Yapay zeka için hız sınırlayıcı
 const blackjackGames = new Map(); // Blackjack oyun takibi
 const minesGames = new Map(); // Mayın tarlası oyun takibi
 const xpCooldowns = new Map(); // Level sistemi için cooldown
@@ -99,7 +86,7 @@ const client = new Client({
     ]
 });
 
-const prefixes = ["nex ", "n!", "x!", "!"];
+const prefixes = ["n!", "x!", "!"];
 
 
 // ---------------- VERİ YÖNETİMİ ----------------
@@ -683,7 +670,7 @@ client.on('interactionCreate', async interaction => {
                 { name: "📈 Level Sistemi", value: "`n!level` - Seviyeni ve XP'ni gösterir", inline: false },
                 { name: "🎰 Kumar Oyunları", value: "`/blackjack <bahis>` - Blackjack oynarsın\n`/mayın <bahis> <mayın_sayısı>` - Mayın tarlası oynarsın", inline: false },
                 { name: "🛠️ Donanım", value: "`!pc-hata` - PC sorunları ve mavi ekran kodları için profesyonel çözümler.", inline: false },
-                { name: "🎮 Eğlence", value: "`nex <herhangi bir şey>` - Yapay zeka (BETA) ile sohbet\n`n!karakter <isim>` - Karakter hikayeleri (Wikipedia destekli)\n`n!ego` - Kim egolu seçer\n`n!roast @kişi` - Laf sokar\n`n!taş` - TKM oynarsın\n`n!sarıl`/`n!op`/`n!tokat` - Gif atar\n`n!pp @kişi` - Avatarını gösterir\n`n!üye` - Sunucu istatistikleri", inline: false }
+                { name: "🎮 Eğlence", value: "`n!karakter <isim>` - Karakter hikayeleri (Wikipedia destekli)\n`n!ego` - Kim egolu seçer\n`n!roast @kişi` - Laf sokar\n`n!taş` - TKM oynarsın\n`n!sarıl`/`n!op`/`n!tokat` - Gif atar\n`n!pp @kişi` - Avatarını gösterir\n`n!üye` - Sunucu istatistikleri", inline: false }
             )
             .setFooter({ text: "NEXORA BOT | Tüm Sistemler Aktif" });
         await interaction.reply({ embeds: [embed] });
@@ -1288,7 +1275,6 @@ client.on('messageCreate', async (message) => {
 
     // ---------------- PC HATA KOMUTU ----------------
     if (command === "pc-hata") {
-        if (prefix === "nex ") return; // Nex prefixi ile çalışmaz
 
         const hataSorgusu = args.join(" ");
         if (!hataSorgusu) {
@@ -1800,7 +1786,7 @@ client.on('messageCreate', async (message) => {
                 { name: "📈 Level Sistemi", value: "`n!level` - Seviyeni ve XP'ni gösterir (Görsel Kart)", inline: false },
                 { name: "🎰 Kumar Oyunları", value: "`n!blackjack <bahis>` veya `/blackjack` - Blackjack oynarsın\n`n!mayın <bahis> <mayın_sayısı>` veya `/mayın` - Mayın tarlası oynarsın", inline: false },
                 { name: "🛠️ Donanım", value: "`!pc-hata` - Mavi ekran kodları ve donanım sorunları için profesyonel çözümler.", inline: false },
-                { name: "🎮 Eğlence", value: "`nex <herhangi bir şey>` - Yapay zeka (BETA) ile sohbet\n`n!karakter <isim>` - Karakter hikayeleri (Wikipedia destekli)\n`n!ego` - Kim egolu seçer\n`n!roast @kişi` - Laf sokar\n`n!taş` - TKM oynarsın\n`n!sarıl`/`n!op`/`n!tokat` - Gif atar\n`n!pp @kişi` - Avatarını gösterir (Görsel Kart)\n`n!üye` - Sunucu istatistikleri", inline: false }
+                { name: "🎮 Eğlence", value: "`n!karakter <isim>` - Karakter hikayeleri (Wikipedia destekli)\n`n!ego` - Kim egolu seçer\n`n!roast @kişi` - Laf sokar\n`n!taş` - TKM oynarsın\n`n!sarıl`/`n!op`/`n!tokat` - Gif atar\n`n!pp @kişi` - Avatarını gösterir (Görsel Kart)\n`n!üye` - Sunucu istatistikleri", inline: false }
             )
             .setFooter({ text: `NEXORA BOT | Tüm Sistemler Aktif | Sürüm: 1.0.1b | PID: ${process.pid}` });
         message.channel.send({ embeds: [embed] });
@@ -1948,83 +1934,6 @@ client.on('messageCreate', async (message) => {
         for (const item in p_user.items) if (p_user.items[item] > 0) txt += `• ${item.toUpperCase().replace("_", " ")}: ${p_user.items[item]}\n`;
         const embed = new EmbedBuilder().setTitle(`🎒 ${message.author.username} Envanteri`).setDescription(txt || "Boş").setColor("#3498db");
         message.reply({ embeds: [embed] });
-    }
-
-    else {
-        // Sadece "nex " prefixi ile AI çalışsın
-        if (prefix !== "nex ") return;
-
-        const soru = [command, ...args].join(" ").trim();
-        if (!soru || soru.length < 2) return;
-
-        // Cooldown Kontrolü (10 saniye)
-        const now = Date.now();
-        const cooldownAmount = 10000;
-        if (aiCooldowns.has(message.author.id)) {
-            const expirationTime = aiCooldowns.get(message.author.id) + cooldownAmount;
-            if (now < expirationTime) {
-                const timeLeft = (expirationTime - now) / 1000;
-                return message.reply(`⏳ Çok hızlı soruyorsun! ${timeLeft.toFixed(1)} saniye sonra tekrar deneyebilirsin.`);
-            }
-        }
-        aiCooldowns.set(message.author.id, now);
-
-        console.log(`[Gemini] Soru geldi: ${soru}`);
-        const loadingMsg = await message.channel.send("🤔 Düşünüyorum...");
-
-        try {
-            const prompt = `Sen Nexora Bot'un yapay zeka asistanısın. Kısa ve öz cevap ver. Soru: ${soru}`;
-
-            const startIndex = lastWorkingModelIndex;
-            const tryOrder = [...MODELS_TO_TRY.slice(startIndex), ...MODELS_TO_TRY.slice(0, startIndex)];
-
-            let success = false;
-            let lastError = "";
-
-            for (const currentModel of tryOrder) {
-                try {
-                    console.log(`[AI] Deneniyor: ${currentModel.name}`);
-                    const fetchResp = await fetch(`https://generativelanguage.googleapis.com/${currentModel.version}/models/${currentModel.name}:generateContent?key=${GEMINI_API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-
-                    if (!fetchResp.ok) {
-                        const errData = await fetchResp.json().catch(() => ({}));
-                        lastError = errData.error?.message || `Sunucu hatası (${fetchResp.status})`;
-                        console.warn(`[AI] ${currentModel.name} başarısız: ${lastError}`);
-                        continue; // Diğer modele geç
-                    }
-
-                    const data = await fetchResp.json();
-
-                    if (data.candidates && data.candidates[0].content.parts && data.candidates[0].content.parts[0].text) {
-                        const responseText = data.candidates[0].content.parts[0].text;
-                        await loadingMsg.edit(responseText.length > 2000 ? responseText.substring(0, 1997) + "..." : responseText);
-                        lastWorkingModelIndex = MODELS_TO_TRY.findIndex(m => m.name === currentModel.name);
-                        success = true;
-                        break;
-                    } else if (data.error) {
-                        lastError = data.error.message;
-                        console.warn(`[AI] ${currentModel.name} hatası: ${lastError}`);
-                    }
-                } catch (err) {
-                    lastError = "Bağlantı hatası.";
-                    console.error(`[AI] ${currentModel.name} bağlantı hatası:`, err.message);
-                }
-            }
-
-            if (!success) {
-                let errorMessage = lastError || "Gemini'dan yanıt alınamadı.";
-                if (errorMessage.includes("quota")) errorMessage = "Google API kotan dolmuş. Lütfen biraz bekle.";
-                await loadingMsg.edit(`❌ ${errorMessage}`);
-            }
-
-        } catch (error) {
-            console.error("Gemini Genel Hata:", error.message);
-            await loadingMsg.edit(`❌ Bir sorun oluştu: ${error.message}`);
-        }
     }
 });
 
